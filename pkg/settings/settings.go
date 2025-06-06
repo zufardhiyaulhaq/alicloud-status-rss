@@ -11,16 +11,19 @@ import (
 
 type Settings struct {
 	NotificationType                    string                   `envconfig:"NOTIFICATION_TYPE" default:"lark"`
-	NotificationLarkWebhookURL          string                   `envconfig:"NOTIFICATION_LARK_WEBHOOK_URL"`
+	NotificationLarkWebhookURLs         []string                 `envconfig:"NOTIFICATION_LARK_WEBHOOK_URLS"`
 	NotificationPoolIntervalMinutes     int                      `envconfig:"NOTIFICATION_POOL_INTERVAL_MINUTES" default:"5"`
 	RSSConfigurations                   RSSConfigurationsDecoder `envconfig:"RSS_CONFIGURATIONS" required:"true"`
 	RSSGUIDExclusionList                []string                 `envconfig:"RSS_GUID_EXCLUSION_LIST" default:""`
 	RSSGUIDCacheEnabled                 bool                     `envconfig:"RSS_GUID_CACHE_ENABLED" default:"false"`
 	RSSGUIDCacheType                    string                   `envconfig:"RSS_GUID_CACHE_TYPE" default:"redis"`
-	RSSGUIDCacheRedisType               string                   `envconfig:"RSS_GUID_CACHE_REDIS_TYPE" default:"sentinel"`
+	RSSGUIDCacheKey                     string                   `envconfig:"RSS_GUID_CACHE_KEY" default:"rss-guids"`
+	RSSGUIDCacheRedisType               string                   `envconfig:"RSS_GUID_CACHE_REDIS_TYPE" default:"standalone"`
+	RSSGUIDCacheRedisAddress            string                   `envconfig:"RSS_GUID_CACHE_REDIS_ADDRESS"`
+	RSSGUIDCacheRedisPassword           string                   `envconfig:"RSS_GUID_CACHE_REDIS_PASSWORD"`
 	RSSGUIDCacheRedisSentinelAddress    []string                 `envconfig:"RSS_GUID_CACHE_REDIS_SENTINEL_ADDRESS"`
 	RSSGUIDCacheRedisSentinelMasterName string                   `envconfig:"RSS_GUID_CACHE_REDIS_SENTINEL_MASTER_NAME"`
-	RSSGUIDCacheRedisPassword           string                   `envconfig:"RSS_GUID_CACHE_REDIS_PASSWORD"`
+	RSSGUIDCacheRedisSentinelPassword   string                   `envconfig:"RSS_GUID_CACHE_REDIS_SENTINEL_PASSWORD"`
 }
 
 type RSSConfiguration struct {
@@ -52,8 +55,8 @@ func (rcd *RSSConfigurationsDecoder) Decode(value string) error {
 
 func (s Settings) Validator(ctx context.Context) error {
 	if s.NotificationType == "lark" {
-		if s.NotificationLarkWebhookURL == "" {
-			return errors.New("NOTIFICATION_LARK_WEBHOOK_URL is required when using lark notification type")
+		if len(s.NotificationLarkWebhookURLs) == 0 {
+			return errors.New("NOTIFICATION_LARK_WEBHOOK_URLS is required when using lark notification type")
 		}
 
 		return nil

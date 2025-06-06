@@ -9,7 +9,7 @@ import (
 
 func NotificationFactory(settings settings.Settings) (NotificationInterface, error) {
 	if settings.NotificationType == "lark" {
-		return lark.NewLarkClient(settings.NotificationLarkWebhookURL), nil
+		return lark.NewLarkClient(settings.NotificationLarkWebhookURLs), nil
 	}
 
 	return nil, fmt.Errorf("notification is not supported")

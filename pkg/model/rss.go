@@ -1,5 +1,9 @@
 package model
 
+import (
+	"strings"
+)
+
 type RSS struct {
 	Channel RSSChannel `xml:"channel"`
 	Type    string
@@ -23,10 +27,13 @@ type RSSChannelItem struct {
 }
 
 func (r RSSChannelItem) ToMessage() Message {
+	content := strings.ReplaceAll(r.Content, "<p>", "")
+	content = strings.ReplaceAll(content, "</p>", "")
+
 	return Message{
 		Type:    "RSS",
 		Title:   r.Title,
-		Content: r.Content,
+		Content: content,
 		Link:    r.Link,
 	}
 }

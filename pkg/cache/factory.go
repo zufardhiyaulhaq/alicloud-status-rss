@@ -11,9 +11,23 @@ import (
 func CacheFactory(ctx context.Context, settings settings.Settings) (CacheInterface, error) {
 	if settings.RSSGUIDCacheType == "redis" {
 		if settings.RSSGUIDCacheRedisType == "sentinel" {
-			return redis.RedisSentinelClient(ctx, settings), nil
+			client, err := redis.RedisSentinelClient(ctx, settings)
+			if err != nil {
+				return nil, err
+			}
+
+			return client, nil
+		}
+
+		if settings.RSSGUIDCacheRedisType == "standalone" {
+			client, err := redis.RedisClient(ctx, settings)
+			if err != nil {
+				return nil, err
+			}
+
+			return client, nil
 		}
 	}
 
-	return nil, fmt.Errorf("notification is not supported")
+	return nil, fmt.Errorf("cache configuration is not supported")
 }
