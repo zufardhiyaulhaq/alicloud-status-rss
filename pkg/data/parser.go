@@ -1,4 +1,4 @@
-package parser
+package data
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/zufardhiyaulhaq/alicloud-status-rss/pkg/model"
 )
 
-func RSS(ctx context.Context, url string) (*model.RSS, error) {
+func ParseRSS(ctx context.Context, url string) (*model.RSS, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

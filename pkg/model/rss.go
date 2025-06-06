@@ -26,12 +26,20 @@ type RSSChannelItem struct {
 	DCDate   string `xml:"date" xml:"dc:date"`
 }
 
-func (r RSSChannelItem) ToMessage() Message {
+type RSSItem struct {
+	Title   string   `json:"title"`
+	Link    string   `json:"link"`
+	Content string   `json:"content"`
+	Type    []string `json:"type"`
+	GUID    string   `json:"guid"`
+}
+
+func (r RSSItem) ToMessage() Message {
 	content := strings.ReplaceAll(r.Content, "<p>", "")
 	content = strings.ReplaceAll(content, "</p>", "")
 
 	return Message{
-		Type:    "RSS",
+		Type:    strings.Join(r.Type, ","),
 		Title:   r.Title,
 		Content: content,
 		Link:    r.Link,

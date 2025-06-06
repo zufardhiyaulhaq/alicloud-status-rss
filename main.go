@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/zufardhiyaulhaq/alicloud-status-rss/pkg/cache"
+	"github.com/zufardhiyaulhaq/alicloud-status-rss/pkg/data"
 	"github.com/zufardhiyaulhaq/alicloud-status-rss/pkg/model"
 	"github.com/zufardhiyaulhaq/alicloud-status-rss/pkg/notification"
-	"github.com/zufardhiyaulhaq/alicloud-status-rss/pkg/parser"
 	"github.com/zufardhiyaulhaq/alicloud-status-rss/pkg/settings"
 )
 
@@ -38,13 +38,18 @@ func main() {
 
 	var RSSData []model.RSS
 	for _, rssConfiguration := range settings.RSSConfigurations {
-		rss, err := parser.RSS(context, rssConfiguration.URL)
+		rss, err := data.ParseRSS(context, rssConfiguration.URL)
 		if err != nil {
 			log.Fatalf("Error parsing RSS feed: %v", err)
 		}
 
 		rss.Type = rssConfiguration.Type
 		RSSData = append(RSSData, *rss)
+	}
+
+	processedRSS, err := data.ProcessRSS(RSSData)
+	if err != nil {
+		log.Fatalf("Error processing RSS data: %v", err)
 	}
 
 	var seenGuids []string
@@ -59,22 +64,19 @@ func main() {
 			seenGuids = append(seenGuids, strings.Split(rawSeenGuids, ",")...)
 		}
 
-		for _, rss := range RSSData {
-			for _, item := range rss.Channel.Items {
-				if !slices.Contains(seenGuids, item.GUID) {
-					message := item.ToMessage()
-					message.Type = rss.Type
+		for _, item := range processedRSS {
+			if !slices.Contains(seenGuids, item.GUID) {
+				message := item.ToMessage()
 
-					err := notificationClient.SendNotification(context, message)
-					if err != nil {
-						log.Printf("Error sending Lark notification: %v", err)
-					} else {
-						fmt.Printf("Notified: %s\n", item.Title)
-						seenGuids = append(seenGuids, item.GUID)
-					}
+				err := notificationClient.SendNotification(context, message)
+				if err != nil {
+					log.Printf("Error sending Lark notification: %v", err)
 				} else {
-					fmt.Printf("Already seen: %s\n", item.Title)
+					fmt.Printf("Notified: %s\n", item.Title)
+					seenGuids = append(seenGuids, item.GUID)
 				}
+			} else {
+				fmt.Printf("Already seen: %s\n", item.Title)
 			}
 		}
 
@@ -84,6 +86,7 @@ func main() {
 				log.Printf("Error saving seen GUIDs to cache: %v", err)
 			}
 		}
+
 		time.Sleep(time.Duration(settings.NotificationPoolIntervalMinutes) * time.Minute)
 	}
 }
