@@ -20,18 +20,18 @@ WORKDIR /home/alicloud-status-rss
 #################
 # Builder image
 #################
-FROM golang:1.23-alpine AS alicloud-status-rss-builder
-RUN apk add --update --no-cache alpine-sdk
+FROM golang:1.23-bullseye AS alicloud-status-rss-builder
+
 WORKDIR /app
 COPY . .
-RUN make build
+RUN CGO_ENABLED=0 go build main.go
 
 #################
 # Final image
 #################
 FROM alicloud-status-rss-base
 
-COPY --from=alicloud-status-rss-builder /app/bin/alicloud-status-rss /usr/local/bin
+COPY --from=alicloud-status-rss-builder /app/main /usr/local/bin/alicloud-status-rss
 
 # Command to run the executable
 ENTRYPOINT ["alicloud-status-rss"]
